@@ -1,0 +1,23 @@
+#PBS -N CellRanger-MkRef
+#PBS -V
+#PBS -l nodes=1:ppn=8
+#PBS -l mem=149gb
+#PBS -l walltime=480:00:00
+#PBS -j oe
+#PBS -o Make-New-Ref-and-Submit-Counts_20190522.out
+#PBS -m abe
+#PBS -M meghan.ferrall-fairbanks@moffitt.org
+
+echo "Started on `/bin/hostname`"
+cd /share/lab_gillies_gatenby/Theory\ Division/CustomReferenceAnalysis-2018/GRCh_Marusyk/MegGRCh38
+module load cellranger/2.2.0
+cellranger mkref --genome=MegCustomGenome --fasta=genomeMarusyk.fa --genes=newCustomGenes.gtf
+
+qsub SUM159_counts.pbs
+qsub MDA_counts.pbs
+qsub S_M_P2_counts.pbs
+qsub S_M_P10_counts.pbs
+
+
+
+
