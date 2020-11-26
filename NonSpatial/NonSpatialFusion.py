@@ -51,11 +51,14 @@ def ComputeShanon(ListePopulation):
     prop=0
     for i in range (0,len(ListePopulation)):
         Tot=Tot+ListePopulation[i][0]
+    #print 'Tot=',Tot
     for i in range (0,len(ListePopulation)):
-        if (ListePopulation[i][0]>0 and Tot>0):
+        if (ListePopulation[i][0]>0):
             prop=float(ListePopulation[i][0])/Tot
             res=res-prop*np.log(prop)
+        #print 'prop=',prop
 
+        #print 'Shanon=',res
     return res
 
 
@@ -70,14 +73,46 @@ def ComputeIndex(ListePopulation,q):
         prop=0;
         for i in range (0,len(ListePopulation)):
             Tot=Tot+ListePopulation[i][0]
-        if (Tot>0):
-            for i in range (0,len(ListePopulation)):
-                if (ListePopulation[i][0]>0):
-                    prop=float(ListePopulation[i][0])/Tot
-                    res=res+prop**q
-            res=res**(float(1)/(1-q))
+        #print 'Tot=',Tot
+        for i in range (0,len(ListePopulation)):
+            prop=float(ListePopulation[i][0])/Tot
+            res=res+prop**q
+        res=res**(float(1)/(1-q))
+        #print 'prop=',prop
+
+        #print 'Shanon=',res
     return res
 
+
+# @njit
+# def Mutation(x):
+#     res=[]
+#     for i in range (0,len(x)):
+#         res.append(x[i])
+#     PartieNulle=[]
+#     count=0
+#     for i in range(0,len(res)):
+#         if (res[i]==0):
+#             PartieNulle.append(i)
+#             count=count+1
+#     if (count>0):
+#         m=np.random.randint(0,len(PartieNulle)-1)
+#         res[PartieNulle[m]]=1
+#     return res
+
+
+
+@jit
+def MutationIfZero(x):
+    res=np.zeros(len(x))
+    for i in range (0,len(x)):
+        res[i]=x[i]
+
+    m=np.random.randint(0,len(x))
+
+    res[m]=1
+
+    return res
 
 
 
@@ -96,6 +131,21 @@ def Mutation(x):
         m=np.random.randint(0,count-1)
         res[PartieNulle[m]]=1
     return res
+
+
+
+# @njit
+# def MutationRev(x):
+#     res=np.zeros(len(x))
+#     for i in range (0,len(x)):
+#         res[i]=x[i]
+    
+#     m=np.random.random_integers(0,len(x)-1)
+#     if (res[m]==1):
+#         res[m]=0
+#     else:
+#         res[m]=1
+#     return res
 
 
 
@@ -145,7 +195,22 @@ def minimum(x1,x2):
     return res
 
 
+# @njit
+# def fusionVect(G1,G2):
+#     Off1=[]
+#     Off2=[]
+    
+#     for i in range (0,len(G1)):
+#         y=np.random.randint(0,2)
+#         if (y==0):
+#             Off1.append(G1[i])
+#             Off2.append(G2[i])
+#         else:
+#             Off1.append(G2[i])
+#             Off2.append(G1[i])
+#     #print 'retamere',[[O1],[O2]
 
+#     return (Off1,Off2)
 
 @njit
 def fusionVect(G1,G2):
@@ -160,12 +225,16 @@ def fusionVect(G1,G2):
         else:
             Off1[i]=G2[i]
             Off2[i]=G1[i]
+    #print 'retamere',[[O1],[O2]
+
     return (Off1,Off2)
 
 
 @njit 
 def numbaSum(Genotype):
+    # print("Genotype=",Genotype)
     res=np.sum(Genotype)
+
     return res
 
 
@@ -182,7 +251,8 @@ def MaxScore(ListePopulation):
 
 start = time.time()
 
-Ngenes=300 #Number of driver genes
+# Ngenes=300 #Number of driver genes
+Ngenes=50 #Number of driver genes
 Genotype=np.zeros(Ngenes)
 GenotypeM1=np.zeros(Ngenes)
 GenotypeM2=np.zeros(Ngenes)
@@ -207,13 +277,26 @@ pmStr=sys.argv[4]
 pm=float(pmStr)
 pfStr=sys.argv[5]
 pf=float(pfStr)
-
+growthRateStr=sys.argv[6]
+growthRate=float(growthRateStr)
+# growthRate=0.67
+deathRate=growthRate
 
 
 DT=1
-deathRate=0.67
-growthRate=0.67
+# pm=0.00005
+
+#pm=0.0
+#pf=0.03 #In vitro non clonogenic fusion rate
+#pf=0.00044 #In vivo fusion rate
+#pf=0
+#deathRate=0.067
+
+
+
+# KC=10000
 fitnessPenalty=growthRate*(1./Ngenes)
+# NgenerationsMax=365
 nDraws=5
 y=0
 
@@ -227,7 +310,13 @@ Score=np.zeros(NgenerationsMax)
 TotalCells=np.zeros(NgenerationsMax)
 FinalList=[]
 
-directory_path='CC'+str(KC)+'mu'+str(pm)+'pf'+str(pf)+'/'
+# NumberMut=np.zeros(NgenerationsMax)
+# ShanonMut=np.zeros(NgenerationsMax)
+# SimpsonMut=np.zeros(NgenerationsMax)
+# TotalCellsMut=np.zeros(NgenerationsMax)
+# FinalListMut=[]
+
+directory_path='Results/CC'+str(KC)+'/Neutral/LogisticFusion/g'+str(growthRate)+'/mu'+str(pm)+'/pf'+str(pf)+'/'
 directory=os.path.dirname(directory_path)
 
 
@@ -247,11 +336,11 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm):
     ListeExtincted=[]
     genotypesCounts=0
     ListePop.append([V,Genotype,0,0,genotypesCounts,0,genotypesCounts])
-    ListePop.append([V,GenotypeM1,0,0,convertBinaire(GenotypeM1),0,0])
-    ListePop.append([V,GenotypeM2,0,0,convertBinaire(GenotypeM2),0,0])
-    ListePop.append([V,GenotypeM3,0,0,convertBinaire(GenotypeM3),0,0])
-    ListePop.append([V,GenotypeM4,0,0,convertBinaire(GenotypeM4),0,0])
-    ListePop.append([V,GenotypeM5,0,0,convertBinaire(GenotypeM5),0,0])
+    #ListePop.append([V,GenotypeM1,0,0,convertBinaire(GenotypeM1),0,0])
+    #ListePop.append([V,GenotypeM2,0,0,convertBinaire(GenotypeM2),0,0])
+    #ListePop.append([V,GenotypeM3,0,0,convertBinaire(GenotypeM3),0,0])
+    #ListePop.append([V,GenotypeM4,0,0,convertBinaire(GenotypeM4),0,0])
+    #ListePop.append([V,GenotypeM5,0,0,convertBinaire(GenotypeM5),0,0])
 
     #Creating and opening results file
     FileName1=directory_path+'Lineage'+str(s)+'.txt'
@@ -266,9 +355,15 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm):
     f1=open(FileName1,'w')
     f1.write("Size Id Time Ancestor\n")
     f2=open(FileName2,'w')
+    # f2.write("Size Id Time Ancestor\n")
     f3=open(FileName3,'w')
+    # f3.write("Size Id Time Ancestor\n")
     f4=open(FileName4,'w')
+    # f4.write("Size Id Time Ancestor\n")
     f5=open(FileName5,'w')
+    # f5.write("Size Id Time Ancestor\n")
+    #f6=open(FileName6,'w')
+    # f6.write("Size Id Time Ancestor\n")
     f7=open(FileName7,'w')
 
 
@@ -286,6 +381,7 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm):
                 
                 newD=np.random.poisson(deathRate*nombreRepresentants*TotalPopulation*DT/KC)
 
+                #newM=np.random.binomial(newCells,pm)
                 countDeads=0
                 newD1=0
                 newD2=0
@@ -335,9 +431,13 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm):
             ListePop[j][2]=0
             j=j+1
         
+        #Hybrids formation
         TotalPopulation=countPopulation(ListePop)
         newH=np.random.poisson(pf*TotalPopulation*DT)
         newH=minimum(newH,int(TotalPopulation/2))
+        #if (newH>0):
+        #    print("newH=",newH)
+        #print("Nombre avant fusion",countPopulation(ListePop))
 
         for j in range (0,newH):
             y=np.random.randint(1,TotalPopulation+1)
@@ -362,6 +462,7 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm):
 
         Ncurrent=len(ListePop)
         TotalPopulation=countPopulation(ListePop)
+        #print("TotalPop=",TotalPopulation," NewH=",newH," countHybirds=",countNewH(ListePop))
         if (TotalPopulation>0):
             for j in range(0,Ncurrent):
                 for k in range(0,ListePop[j][5]):
@@ -374,12 +475,18 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm):
                         ListeExtincted.append(NewElement)
 
                     Genotype2=ListePop[neighbor][1]
+                        #print 'Espece eteinte=',ListePop[neighbor][1]
+                        #del ListePop[neighbor]
+                        #Ncurrent=Ncurrent-1
                         
                     (Off1,Off2)=fusionVect(Genotype1,Genotype2)
+                    #print 'Genotype1=',Genotype1,'Genotype2=',Genotype2,'Off1=',Off1,'Off2=',Off2
                     exist=0
                     count=0
                     while (count<len(ListePop) and exist==0):
                         if (convertBinaire(ListePop[count][1])-convertBinaire(Off1)==0):
+                            #print("Exists already!!!")
+                            #print('Parents=',Genotype1,Genotype2,'Hybrid=',ListePop[count][1])
                             ListePop[count][0]=ListePop[count][0]+1
                             exist=1
                         count=count+1
@@ -389,20 +496,28 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm):
 
                         NewElement=[1,Off1,0,l*DT,ListePop[j][6],0,genotypesCounts]
                         ListePop.append(NewElement)
+                        # print('Parents=',Genotype1,Genotype2)
+                        # print('Espece creee=',ListePop[count][1])
                     
                     exist=0
                     count=0
                     while (count<len(ListePop) and exist==0):
                         if (convertBinaire(ListePop[count][1])-convertBinaire(Off2)==0):
+                            #print("Exists already!!!")
+                            #print('Parents=',Genotype1,Genotype2,'Hybrid=',ListePop[count][1])
                             ListePop[count][0]=ListePop[count][0]+1
                             exist=1
                         count=count+1
                     if (exist==0):
                         genotypesCounts=genotypesCounts+1
+                        # print("New species!!!")
                         NewElement=[1,Off2,0,l*DT,ListePop[j][6],0,genotypesCounts]
                         ListePop.append(NewElement)
+                        # print('Parents=',Genotype1,Genotype2)
+                        # print('Espece creee=',ListePop[count][1])
                     
                 ListePop[j][5]=0
+        #print("Nombre apres fusion",countPopulation(ListePop))
         else:
             for j in range(0,Ncurrent):
                 for k in range(0,ListePop[j][5]):
@@ -412,6 +527,8 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm):
         cleanData(ListePop)
 
         
+
+        #FinalList.append(ListePop)
         Number[l]=countSpecies(ListePop)
 
         TotalCells[l]=countPopulation(ListePop)
@@ -419,7 +536,10 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm):
         Simpson[l]=ComputeIndex(ListePop,2)
         Score[l]=MaxScore(ListePop)
 
-        if (l%10==0):
+        
+
+        #Writting results
+        if (l%50==0 or l==NgenerationsMax-1):
 
 
                 for i in range(0,len(ListeExtincted)):
@@ -427,6 +547,8 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm):
 
                 for i in range(0,len(ListePop)):
                         f1.write("%i %i %5.1f %i\n" % (ListePop[i][0],ListePop[i][6],l*DT,ListePop[i][4]))
+
+                # f6.write("%i %i %i\n" % (ListePop[i][0],ListePop[i][1],l*DT)
                 f2.write("%i %i\n" % (TotalCells[l],l*DT))
                 f3.write("%i %i\n" % (Number[l],l*DT))
                 f4.write("%i %i\n" % (Shanon[l],l*DT))
@@ -434,7 +556,10 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm):
                 f7.write("%i %i\n" % (Score[l],l*DT))
 
                 ListeExtincted=[]
-  
+
+        #print 'ListePop=',ListePop
+
+    #Closing file    
     f1.close()
     f2.close()
     f3.close()
