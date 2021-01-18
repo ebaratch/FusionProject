@@ -209,11 +209,11 @@ DT=1
 
 GenotypeTemporaire=np.zeros(Ngenes)
 
-Number=np.zeros(NgenerationsMax)
-Shanon=np.zeros(NgenerationsMax)
-Simpson=np.zeros(NgenerationsMax)
-Score=np.zeros(NgenerationsMax)
-TotalCells=np.zeros(NgenerationsMax)
+Number=np.zeros(NgenerationsMax) #Number of genotypes per time step
+Shanon=np.zeros(NgenerationsMax) #Shanon index per time step
+Simpson=np.zeros(NgenerationsMax) #Simpson index per time step
+Score=np.zeros(NgenerationsMax) #Maximal amount of mutations per time step
+TotalCells=np.zeros(NgenerationsMax) #Total number of cells per time step
 FinalList=[]
 
 
@@ -367,7 +367,7 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm):
                     Genotype2=ListePop[neighbor][1]
 
                         
-                    (Off1,Off2)=fusionVect(Genotype1,Genotype2) 
+                    (Off1,Off2)=fusionVect(Genotype1,Genotype2) #Recombination
 
                     exist=0
                     count=0
@@ -381,7 +381,7 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm):
                         genotypesCounts=genotypesCounts+1
 
 
-                        NewElement=[1,Off1,0,l*DT,ListePop[j][6],0,genotypesCounts]
+                        NewElement=[1,Off1,0,l*DT,ListePop[j][6],0,genotypesCounts] #New genotype!
                         ListePop.append(NewElement)
 
                     
@@ -396,7 +396,7 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm):
                     if (exist==0):
                         genotypesCounts=genotypesCounts+1
 
-                        NewElement=[1,Off2,0,l*DT,ListePop[j][6],0,genotypesCounts]
+                        NewElement=[1,Off2,0,l*DT,ListePop[j][6],0,genotypesCounts] #New genotype!
                         ListePop.append(NewElement)
 
                     
@@ -413,7 +413,6 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm):
         
 
         Number[l]=countSpecies(ListePop)
-
         TotalCells[l]=countPopulation(ListePop)
         Shanon[l]=ComputeShanon(ListePop)
         Simpson[l]=ComputeIndex(ListePop,2)
