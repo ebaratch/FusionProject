@@ -182,7 +182,6 @@ def MaxScore(ListePopulation):
 
 start = time.time()
 
-
 #Number of considered genes
 # Ngenes=300 #Number of driver genes
 Ngenes=50 #Number of driver genes
@@ -191,19 +190,19 @@ Genotype=np.zeros(Ngenes)
 
 
 #Parameters entered as a terminal input
-KCStr=sys.argv[2]
+KCStr=sys.argv[2] #Carrying capacity
 KC=int(KCStr)
-NgenerationsMaxStr=sys.argv[3]
+NgenerationsMaxStr=sys.argv[3] #Number of generations
 NgenerationsMax=int(NgenerationsMaxStr)
-pmStr=sys.argv[4]
+pmStr=sys.argv[4] #Mutation Rate per Gene
 pm=float(pmStr)
-pfStr=sys.argv[5]
+pfStr=sys.argv[5] #Fusion Rate
 pf=float(pfStr)
-growthRateStr=sys.argv[6]
+growthRateStr=sys.argv[6] #Growth Rate
 growthRate=float(growthRateStr)
-deathRate=growthRate
-DT=1
-# DT=0.1
+deathRate=growthRate #Death Rate
+DT=1 #Time Step
+# DT=0.1 #Time Step
 
 
 
@@ -449,7 +448,7 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm):
     
 
 
-s=sys.argv[1]
+s=sys.argv[1] #Taking input parameters
 
 
 ModelRun(NgenerationsMax,DT,s,KC,pm)

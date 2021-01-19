@@ -9,6 +9,7 @@ import os
 
 
 
+#Functions
 @jit
 def countPopulation(ListePopulation):
     countPop=0
@@ -73,6 +74,7 @@ def ComputeIndex(ListePopulation,q):
     return res
 
 
+
 @jit
 def TargetedMutation(x,j):
     res=np.zeros(len(x))
@@ -106,14 +108,12 @@ def Mutation(x):
 
 
 
-
 @jit
 def chooseElement(ListePopulation):
     countPop=0
     res=0
     for i in range (0,len(ListePopulation)):
         countPop=countPop+ListePopulation[i][0]
-    #print("countPop=",countPop)
     if (countPop==1):
         y=1
     else:
@@ -168,7 +168,6 @@ def fusionVect(G1,G2):
             Off1[i]=G2[i]
             Off2[i]=G1[i]
 
-
     return (Off1,Off2)
 
 
@@ -193,53 +192,44 @@ def MaxScore(ListePopulation):
 
 start = time.time()
 
+
+#Number of considered genes
 Ngenes=300 #Number of driver genes
 # Ngenes=50 #Number of driver genes
 Genotype=np.zeros(Ngenes)
-GenotypeM1=np.zeros(Ngenes)
-GenotypeM2=np.zeros(Ngenes)
-GenotypeM3=np.zeros(Ngenes)
-GenotypeM4=np.zeros(Ngenes)
-GenotypeM5=np.zeros(Ngenes)
 
 
-    
-GenotypeM1[0]=1
-GenotypeM2[1]=1
-GenotypeM3[2]=1
-GenotypeM4[3]=1
-GenotypeM5[4]=1
 
-
-KCStr=sys.argv[2]
+#Parameters entered as a terminal input
+KCStr=sys.argv[2] #Carrying capacity
 KC=int(KCStr)
-pmStr=sys.argv[3]
-pm=float(pmStr)
-pfStr=sys.argv[4]
-pf=float(pfStr)
-growthRateStr=sys.argv[5]
-growthRate=float(growthRateStr)
-diversityStr=sys.argv[6]
-diversity=int(diversityStr)
-deathRate=growthRate
-NgenerationsMaxStr=sys.argv[7]
+NgenerationsMaxStr=sys.argv[3] #Number of generations
 NgenerationsMax=int(NgenerationsMaxStr)
-DTStr=sys.argv[8]
-DT=float(DTStr)
-
+pmStr=sys.argv[4] #Mutation Rate per Gene
+pm=float(pmStr)
+pfStr=sys.argv[5] #Fusion Rate
+pf=float(pfStr)
+growthRateStr=sys.argv[6] #Growth Rate
+growthRate=float(growthRateStr)
+diversityStr=sys.argv[7]
+diversity=int(diversityStr)
+deathRate=growthRate #Death Rate
+DT=1 #Time Step
+# DT=0.1 #Time Step
 
 
 
 GenotypeTemporaire=np.zeros(Ngenes)
 
-Number=np.zeros(NgenerationsMax)
-Shanon=np.zeros(NgenerationsMax)
-Simpson=np.zeros(NgenerationsMax)
-Score=np.zeros(NgenerationsMax)
-TotalCells=np.zeros(NgenerationsMax)
+Number=np.zeros(NgenerationsMax) #Number of genotypes per time step
+Shanon=np.zeros(NgenerationsMax) #Shanon index per time step
+Simpson=np.zeros(NgenerationsMax) #Simpson index per time step
+Score=np.zeros(NgenerationsMax) #Maximal amount of mutations per time step
+TotalCells=np.zeros(NgenerationsMax) #Total number of cells per time step
 FinalList=[]
 
 
+# Results folder path
 directory_path='Results/CC'+str(KC)+'/Neutral/Diversity/'+str(diversity)+'/LogisticFusion/g'+str(growthRate)+'/mu'+str(pm)+'/pf'+str(pf)+'/'
 directory=os.path.dirname(directory_path)
 
@@ -248,6 +238,7 @@ if not os.path.exists(directory):
     os.makedirs(directory)
 
 
+#Main Function
 @jit
 def ModelRun(NgenerationsMax,DT,s,KC,pm,pf,diversity):
 
@@ -263,43 +254,11 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm,pf,diversity):
 
 
     #Creating and opening results file
-
-    FileName1Ini=directory_path+'TotalIni'+str(s)+'.txt'
-    FileName2Ini=directory_path+'NumberMutIni'+str(s)+'.txt'
-    FileName3Ini=directory_path+'ShanonIni'+str(s)+'.txt'
-    FileName4Ini=directory_path+'SimpsonIni'+str(s)+'.txt'
-    FileName5Ini=directory_path+'ScoreIni'+str(s)+'.txt'
-
-
-    FileName1First=directory_path+'TotalFirst'+str(s)+'.txt'
-    FileName2First=directory_path+'NumberMutFirst'+str(s)+'.txt'
-    FileName3First=directory_path+'ShanonFirst'+str(s)+'.txt'
-    FileName4First=directory_path+'SimpsonFirst'+str(s)+'.txt'
-    FileName5First=directory_path+'ScoreFirst'+str(s)+'.txt'
-
-
     FileName1=directory_path+'Total'+str(s)+'.txt'
     FileName2=directory_path+'NumberMut'+str(s)+'.txt'
     FileName3=directory_path+'Shanon'+str(s)+'.txt'
     FileName4=directory_path+'Simpson'+str(s)+'.txt'
     FileName5=directory_path+'Score'+str(s)+'.txt'
-
-
-
-    f1Ini=open(FileName1Ini,'w')
-    f2Ini=open(FileName2Ini,'w')
-    f3Ini=open(FileName3Ini,'w')
-    f4Ini=open(FileName4Ini,'w')
-    f5Ini=open(FileName5Ini,'w')
-
-
-
-    f1First=open(FileName1First,'w')
-    f2First=open(FileName2First,'w')
-    f3First=open(FileName3First,'w')
-    f4First=open(FileName4First,'w')
-    f5First=open(FileName5First,'w')
-
 
 
     f1=open(FileName1,'w')
@@ -309,41 +268,22 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm,pf,diversity):
     f5=open(FileName5,'w')
 
 
-    NumberIni=countSpecies(ListePop)
-    TotalCellsIni=countPopulation(ListePop)
-    ShanonIni=ComputeShanon(ListePop)
-    SimpsonIni=ComputeIndex(ListePop,2)
-    ScoreIni=MaxScore(ListePop)
-
-
-
-    f1Ini.write("%i\n" % (TotalCellsIni))
-    f2Ini.write("%i\n" % (NumberIni))
-    f3Ini.write("%i\n" % (ShanonIni))
-    f4Ini.write("%i\n" % (SimpsonIni))
-    f5Ini.write("%i\n" % (ScoreIni))
-
-
-    f1Ini.close()
-    f2Ini.close()
-    f3Ini.close()
-    f4Ini.close()
-    f5Ini.close()
-
-
+    #Time loop
     for l in range (0,NgenerationsMax):
         print('Generation=',l)
         newD=0
         TotalPopulation=countPopulation(ListePop)
+
+        #Population loop
         for j in range(0,len(ListePop)):
             nombreRepresentants=ListePop[j][0]
             if (nombreRepresentants>0):
-                newCells=np.random.poisson(growthRate*nombreRepresentants*DT)
-                newM=np.random.binomial(newCells,Ngenes*pm)
+                newCells=np.random.poisson(growthRate*nombreRepresentants*DT) #Newborns
+                newM=np.random.binomial(newCells,Ngenes*pm) #New mutants
                 if (newM>newCells):
                     newM=newCells
                 
-                newD=np.random.poisson(deathRate*nombreRepresentants*TotalPopulation*DT/KC)
+                newD=np.random.poisson(deathRate*nombreRepresentants*TotalPopulation*DT/KC) #New dead cells
 
                 countDeads=0
                 newD1=0
@@ -396,8 +336,9 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm,pf,diversity):
         
         #Hybrids formation
         TotalPopulation=countPopulation(ListePop)
-        newH=np.random.poisson(pf*TotalPopulation*DT)
+        newH=np.random.poisson(pf*TotalPopulation*DT) #New hybrids
         newH=minimum(newH,int(TotalPopulation/2))
+
 
         for j in range (0,newH):
             y=np.random.randint(1,TotalPopulation+1)
@@ -436,7 +377,7 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm,pf,diversity):
                     Genotype2=ListePop[neighbor][1]
 
                         
-                    (Off1,Off2)=fusionVect(Genotype1,Genotype2)
+                    (Off1,Off2)=fusionVect(Genotype1,Genotype2) #Recombination
                     exist=0
                     count=0
                     while (count<len(ListePop) and exist==0):
@@ -448,8 +389,9 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm,pf,diversity):
                         genotypesCounts=genotypesCounts+1
 
 
-                        NewElement=[1,Off1,0,l*DT,ListePop[j][6],0,genotypesCounts]
+                        NewElement=[1,Off1,0,l*DT,ListePop[j][6],0,genotypesCounts] #New genotype!
                         ListePop.append(NewElement)
+    
                     
                     exist=0
                     count=0
@@ -460,7 +402,7 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm,pf,diversity):
                         count=count+1
                     if (exist==0):
                         genotypesCounts=genotypesCounts+1
-                        NewElement=[1,Off2,0,l*DT,ListePop[j][6],0,genotypesCounts]
+                        NewElement=[1,Off2,0,l*DT,ListePop[j][6],0,genotypesCounts] #New genotype!
                         ListePop.append(NewElement)
                     
                 ListePop[j][5]=0
@@ -474,25 +416,13 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm,pf,diversity):
 
         
         Number[l]=countSpecies(ListePop)
-
         TotalCells[l]=countPopulation(ListePop)
         Shanon[l]=ComputeShanon(ListePop)
         Simpson[l]=ComputeIndex(ListePop,2)
         Score[l]=MaxScore(ListePop)
 
         
-    f1First.write("%i\n" % (TotalCells[0]))
-    f2First.write("%i\n" % (Number[0]))
-    f3First.write("%i\n" % (Shanon[0]))
-    f4First.write("%i\n" % (Simpson[0]))
-    f5First.write("%i\n" % (Score[0]))
-
-    f1First.close()
-    f2First.close()
-    f3First.close()
-    f4First.close()
-    f5First.close()
-
+    #Writting results
     f1.write("%i\n" % (TotalCells[NgenerationsMax-1]))
     f2.write("%i\n" % (Number[NgenerationsMax-1]))
     f3.write("%i\n" % (Shanon[NgenerationsMax-1]))
@@ -508,7 +438,7 @@ def ModelRun(NgenerationsMax,DT,s,KC,pm,pf,diversity):
     
 
 
-s=sys.argv[1]
+s=sys.argv[1] #Taking input parameters
 
 
 ModelRun(NgenerationsMax,DT,s,KC,pm,pf,diversity)
