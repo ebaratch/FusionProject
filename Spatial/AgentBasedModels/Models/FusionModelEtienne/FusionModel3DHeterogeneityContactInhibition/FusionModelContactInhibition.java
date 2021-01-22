@@ -248,7 +248,6 @@ class Dish extends AgentGrid3D<Cell> {
             if(TypeRepresentants[i]>0){
                 Shanon=Shanon-(TypeRepresentants[i]*1.0/TotalCell)*Math.log(TypeRepresentants[i]*1.0/TotalCell);
                 System.out.println("checkProp="+i+(float)TypeRepresentants[i]/TotalCell);
-                //System.out.println("PUTAIN DE LOG="+Math.log(TypeRepresentants[i]*1.0/TotalCell));
                 sumProp=sumProp+(float)TypeRepresentants[i]/TotalCell;
             }
             TypeRepresentants[i]=0;

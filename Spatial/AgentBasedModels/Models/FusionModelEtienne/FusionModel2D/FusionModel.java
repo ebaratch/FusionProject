@@ -30,8 +30,6 @@ class Dish extends AgentGrid2D<Cell> {
     double DIV_RADIUS=CELL_RAD*(2.0/3.0);
     double FORCE_EXPONENT=2;
     double FORCE_SCALER=0.7;
-    //double MAX_VEL=1000000000;
-
     int fusionCt=0;
     //INTERNAL VARIABLES
     Rand rn=new Rand();
@@ -45,23 +43,11 @@ class Dish extends AgentGrid2D<Cell> {
             rn.RandomPointInCircle(startingRadius, startCoords);
             Cell c=NewAgentPT(startCoords[0]+xDim/2.0,startCoords[1]+yDim/2.0);
             c.Init(RED);
-//            if(i%2==0) {
-//                c.Init(RED);
-//            }
-//            else {
-//                c.Init(GREEN);
-//            }
         }
         for (int i = 0; i < startingGreen; i++) {
             rn.RandomPointInCircle(startingRadius, startCoords);
             Cell c=NewAgentPT(startCoords[0]+xDim/2.0,startCoords[1]+yDim/2.0);
             c.Init(GREEN);
-//            if(i%2==0) {
-//                c.Init(RED);
-//            }
-//            else {
-//                c.Init(GREEN);
-//            }
         }
     }
     void Fusion(Cell c1,Cell c2){
@@ -107,7 +93,6 @@ class Dish extends AgentGrid2D<Cell> {
             }
             loopCt++;
             if(maxForce<STEADY_STATE_FORCE){
-                //System.out.println(loopCt+","+maxForce);
                 break;
             }
         }
@@ -115,22 +100,15 @@ class Dish extends AgentGrid2D<Cell> {
     }
     void Step(){
         SteadyStateMovement();
-        //for (Cell c:this) {
-        //    c.Observe();
-        //}
-        //for (Cell c:this){
-        //    c.Act();
-        //}
+
         cellScratch.clear();
         for (Cell c:this) {
             c.Step();
-//            cellScratch.set(neighborCt,c);
         }
         for (Cell c:this){
             fusionCt+=c.Fuse()?1:0;
 //            fusionCt+=c.SpacelessFuse()?1:0;
         }
-        //System.out.println(fusionCt);
         IncTick();
     }
 
@@ -173,7 +151,6 @@ class Cell extends SphericalAgent2D<Cell,Dish> {
             return 0;
         }
         return Math.pow(G().FORCE_SCALER*overlap,G().FORCE_EXPONENT);
-        //return G().FORCE_SCALER*overlap;
     }
     boolean Fuse(){
         if(hybrid || dead){return false;}
@@ -200,24 +177,7 @@ class Cell extends SphericalAgent2D<Cell,Dish> {
 
     boolean SpacelessFuse(){
         if(hybrid || dead){return false;}
-        //listing all cells in the area
-//        G().cellScratch.clear();
-        //G().AgentsInRad(G().cellScratch,Xpt(),Ypt(),G().length);
-//        int neighborCt=0;
-        //getting valid fusion neighbors
-//        for (Cell c:G()) {
-//            if(!c.hybrid&&!c.dead&&c!=this){
-//                G().cellScratch.set(neighborCt,c);
-//                neighborCt++;
-//            }
-//        }
-//        for (int i=0;i<G().cellScratch.size();i++) {
-//            Cell c=G().cellScratch.get(i);
-//            if(!c.hybrid&&!c.dead&&c!=this){
-//                G().cellScratch.set(neighborCt,c);
-//                neighborCt++;
-//            }
-//        }
+
         //fusing
         if(G().rn.Double()<G().FUSION_PROB){
             G().SpacelessFusion(this,G().RandomAgent2(G().rn));
@@ -236,13 +196,7 @@ class Cell extends SphericalAgent2D<Cell,Dish> {
     double Observe(){
 
         return SumForces(radius+G().MAX_RAD,G().cellScratch,this::OverlapToForce);
-        /*
-        if(ret>G().MAX_VEL){
-            xVel*=G().MAX_VEL/ret;
-            yVel*=G().MAX_VEL/ret;
-        }
-        return ret;
-        */
+
     }
     void Act(){
         ForceMove();
@@ -278,10 +232,9 @@ public class FusionModel {
         int yellowCount = 0;
         int deadCount= 0 ;
         String outputh_path="Results/FusionGreenRed/";
-        //TickTimer trt=new TickRateTimer();
         Window2DOpenGL vis = new Window2DOpenGL("Cell Fusion Visualization", 1000, 1000, SIDE_LEN, SIDE_LEN);
         Dish d = new Dish(SIDE_LEN, STARTING_RED, STARTING_GREEN, STARTING_RADIUS);
-        //d.SetCellsColor("red");
+
         for (int i = 0; i < TIMESTEPS; i++) {
             vis.TickPause(0);
             d.Step();

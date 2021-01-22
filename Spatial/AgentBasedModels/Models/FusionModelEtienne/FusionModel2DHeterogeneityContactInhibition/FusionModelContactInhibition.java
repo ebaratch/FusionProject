@@ -17,7 +17,7 @@ import java.util.Random;
 
 import static Framework.Util.*;
 
-class Dish extends AgentGrid2D<Cell> {
+class Tissue extends AgentGrid2D<Cell> {
     final static int BLACK=RGB(0,0,0),RED=RGB(1,0,0),GREEN=RGB(0,1,0),YELLOW=RGB(1,1,0),BLUE=RGB(0,0,1),WHITE=RGB(1,1,1),CYTOPLASM=RGB256(191,156,147);
     //GLOBAL CONSTANTS
     double DIVISION_PROB=0.67/24;
@@ -30,8 +30,7 @@ class Dish extends AgentGrid2D<Cell> {
     //double FUSION_PROB=0.02;
     //double FUSION_PROB=0.1;
 
-    //BitSet bs = new BitSet();
-    //long bits=1+1<<1;
+
     double CELL_RAD=0.3;
     double MAX_RAD=Math.sqrt(2)*CELL_RAD;
     double FRICTION=0.5;
@@ -43,12 +42,11 @@ class Dish extends AgentGrid2D<Cell> {
     int GENE_NUMBER=20;
     //double mutationProb=0.00001/24;
     double mutationProb=0.005;
-//    int[] WILDTYPE={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
     int [] WILDTYPE=new int[GENE_NUMBER];
     int MAXSCORE;
     int[] TypeRepresentants;
 
-    //double MAX_VEL=1000000000;
+
 
     int fusionCt=0;
     //INTERNAL VARIABLES
@@ -56,7 +54,7 @@ class Dish extends AgentGrid2D<Cell> {
     ArrayList<Cell> cellScratch=new ArrayList<>();
     double[] divCoordScratch=new double[2];
 
-    public Dish(int sideLen,int startingPop,double startingRadius){
+    public Tissue(int sideLen,int startingPop,double startingRadius){
         super(sideLen,sideLen,Cell.class,true,true);
         double[] startCoords=new double[2];
         for (int i=0;i<GENE_NUMBER;i++) {
@@ -74,62 +72,31 @@ class Dish extends AgentGrid2D<Cell> {
             rn.RandomPointInCircle(startingRadius, startCoords);
             Cell c=NewAgentPT(startCoords[0]+xDim/2.0,startCoords[1]+yDim/2.0);
             if(i%2==0) {
-                //for (int j=0;j<GENE_NUMBER;j++) {
-                //        WILDTYPE[j]=0;
-                //    }
+
                 c.Init(RED,WILDTYPE);
 
-                //c.Mutate();
-                //for (int j=0;j<GENE_NUMBER;j++){
-                //    System.out.println("WILDTYPE="+j+WILDTYPE[j]);
-                //}
             }
             else {
-                //for (int j=0;j<GENE_NUMBER;j++) {
-                //    WILDTYPE[j]=0;
-                //}
                 c.Init(RED,WILDTYPE);
             }
         }
     }
 
 
-    //int[] Blendind(int[] Genotype1,int[] Genotype2){
-    //    int[] BlendedGenome=new int[GENE_NUMBER];
-    //    for (int i=0;i<GENE_NUMBER;i++){
-    //        if(rn.nextDouble()<0.5) {
-    //            BlendedGenome[i]=Genotype1[i];
-    //            System.out.println("vrai");
-    //        }
-    //        else{
-    //            BlendedGenome[i]=Genotype2[i];
-    //            System.out.println("faux");
-    //        }
-    //    }
-    //    return BlendedGenome;
-    //}
-
 
     void Blendind(int[] Genotype1,int[] Genotype2){
-//        for (int i=0;i<GENE_NUMBER;i++){
-//            System.out.println("entries="+i+Genotype1[i]+Genotype2[i]);
-//        }
-        //int[] ScratchGenome=new int[GENE_NUMBER];
+
         int tempBit=0;
         for (int i=0;i<GENE_NUMBER;i++){
             if(rn.Double()<0.5) {
                 tempBit = Genotype1[i];
-                //System.out.println("vrai");
+
                 Genotype1[i] = Genotype2[i];
                 Genotype2[i] = tempBit;
             }
-            else{
-                //System.out.println("faux");
-            }
+
         }
-//        for (int i=0;i<GENE_NUMBER;i++){
-//            System.out.println("results="+i+Genotype1[i]+Genotype2[i]);
-//        }
+
     }
 
 
@@ -180,19 +147,14 @@ class Dish extends AgentGrid2D<Cell> {
     }
     void Step(){
         SteadyStateMovement();
-        //for (Cell c:this) {
-        //    c.Observe();
-        //}
-        //for (Cell c:this){
-        //    c.Act();
-        //}
+
         for (Cell c:this) {
             c.Step();
         }
         for (Cell c:this){
             fusionCt+=c.Fuse()?1:0;
         }
-        //System.out.println(fusionCt);
+
         IncTick();
     }
 
@@ -242,7 +204,6 @@ class Dish extends AgentGrid2D<Cell> {
             if(TypeRepresentants[i]>0){
                 Shanon=Shanon-(TypeRepresentants[i]*1.0/TotalCell)*Math.log(TypeRepresentants[i]*1.0/TotalCell);
                 System.out.println("checkProp="+i+(float)TypeRepresentants[i]/TotalCell);
-                //System.out.println("PUTAIN DE LOG="+Math.log(TypeRepresentants[i]*1.0/TotalCell));
                 sumProp=sumProp+(float)TypeRepresentants[i]/TotalCell;
             }
             TypeRepresentants[i]=0;
@@ -267,7 +228,6 @@ class Dish extends AgentGrid2D<Cell> {
             TypeRepresentants[i]=0;
         }
 
-        //System.out.println("checkPop="+TotalCell+","+sumProp);
         return Richness;
     }
 
@@ -287,11 +247,10 @@ class Dish extends AgentGrid2D<Cell> {
 
 }
 
-class Cell extends SphericalAgent2D<Cell,Dish> {
+class Cell extends SphericalAgent2D<Cell,Tissue> {
     int color;
     boolean hybrid;
     int[] Genotype;
-    //double forceSum;//used with contact inhibition calculation
     double DIV_BIAS;
     double INHIB_WEIGHT;
 
@@ -308,20 +267,15 @@ class Cell extends SphericalAgent2D<Cell,Dish> {
         for (int i=0;i<G().GENE_NUMBER;i++){
             Genotype[i]=GenotypeIni[i];
         }
-        //for (int i=0;i<G().GENE_NUMBER;i++){
-        //    Genotype[i]=0;
-        //}
+
         SetCellColor();
     }
     void Init(int InitialColor,boolean IsHybrid,int[] GenotypeIni){
         xVel=0;
         yVel=0;
 
-        //Genotype=new int[G().GENE_NUMBER];
         Genotype=GenotypeIni;
-        //for (int i=0;i<G().GENE_NUMBER;i++){
-        //    Genotype[i]=0;
-        //}
+
         hybrid=IsHybrid;
         if(hybrid==false){
             radius=G().CELL_RAD;
@@ -333,28 +287,13 @@ class Cell extends SphericalAgent2D<Cell,Dish> {
         SetCellColor();
     }
 
-    //void SetCellColor(int newColor){
-    //    color=newColor;
-    //}
+
 
     void SetCellColor(){
-//        double sum=0;
-//        for (int i=0;i<G().GENE_NUMBER;i++){
-//            sum=sum+Genotype[i];
-//        }
         double binary=0;
         binary=G().ConvertBinary(this.Genotype);
         color=LongRainbowMap(1-1.0*(binary)/(Math.pow(2,G().GENE_NUMBER)-1));
-//        color = HeatMapRGB(Math.max(0.7-1.5*(sum)/G().GENE_NUMBER,0));
-        //if (sum==0){
-        //    color=G().GREEN;
-        //}
-        //else if (sum==1.0){
-        //    color=G().RED;
-        //}
-        //else if (sum==2.0){
-        //    color=G().BLUE;
-        //}
+
     }
 
 
@@ -363,19 +302,12 @@ class Cell extends SphericalAgent2D<Cell,Dish> {
     }
 
     void Mutate(){
-//        for (int i=0;i<G().GENE_NUMBER;i++){
-//            System.out.println("entries="+i+Genotype[i]);
-//        }
+
         int indexMut=G().rn.Int(G().GENE_NUMBER);
         if (Genotype[indexMut]==0){
             Genotype[indexMut]=1;
         }
-//        else{
-//            Genotype[indexMut]=0;
-//        }
-//        for (int i=0;i<G().GENE_NUMBER;i++){
-//            System.out.println("sorties="+i+Genotype[i]);
-//        }
+
         SetCellColor();
     }
 
@@ -411,26 +343,7 @@ class Cell extends SphericalAgent2D<Cell,Dish> {
 
     boolean SpacelessFuse(){
         if(hybrid){return false;}
-        //listing all cells in the area
-//        G().cellScratch.clear();
-        //G().AgentsInRad(G().cellScratch,Xpt(),Ypt(),G().length);
-//        int neighborCt=0;
-        //getting valid fusion neighbors
-//        for (Cell c:G()) {
-//            if(!c.hybrid&&!c.dead&&c!=this){
-//                G().cellScratch.set(neighborCt,c);
-//                neighborCt++;
-//            }
-//        }
-//        for (int i=0;i<G().cellScratch.size();i++) {
-//            Cell c=G().cellScratch.get(i);
-//            if(!c.hybrid&&!c.dead&&c!=this){
-//                G().cellScratch.set(neighborCt,c);
-//                neighborCt++;
-//            }
-//        }
-        //fusing
-        //System.out.println("Check1");
+
         if(G().rn.Double()<G().FUSION_PROB){
 //            System.out.println("Check2");
             G().Fusion(this,G().RandomAgent2(G().rn));
@@ -443,14 +356,7 @@ class Cell extends SphericalAgent2D<Cell,Dish> {
     double Observe(){
 
         return SumForces(radius+G().MAX_RAD,G().cellScratch,this::OverlapToForce);
-        //return forceSum;
-        /*
-        if(ret>G().MAX_VEL){
-            xVel*=G().MAX_VEL/ret;
-            yVel*=G().MAX_VEL/ret;
-        }
-        return ret;
-        */
+
     }
     void Act(){
         ForceMove();
@@ -488,59 +394,34 @@ public class FusionModelContactInhibition {
         //TickTimer trt=new TickRateTimer();
         for (int j = 20; j < 21; j++) {
             Window2DOpenGL vis = new Window2DOpenGL("Cell Fusion Visualization", 1000, 1000, SIDE_LEN, SIDE_LEN);
-            Dish d = new Dish(SIDE_LEN, STARTING_POP, STARTING_RADIUS);
+            Tissue t = new Tissue(SIDE_LEN, STARTING_POP, STARTING_RADIUS);
             double Shanon = 0;
             double Richness=0;
             double MaxMut=0;
             double Total=0;
-            //double Shanon = 0;
-            //int[] vectorExample={1,0,0,0,1,0};
-            //int[] vectorExample2={0,1,1,1,1,0};
-            //for (int i=0;i<6;i++){
-            //    System.out.println("entries="+i+vectorExample[i]+vectorExample2[i]);
-            //}
-            //d.Blendind(vectorExample,vectorExample2);
-            //for (int i=0;i<6;i++){
-            //    System.out.println("results="+i+vectorExample[i]+vectorExample2[i]);
-            //}
 
-            //d.SetCellsColor("red");
-
-
-//        for (int i = 0; i < TIMESTEPS; i++) {
-//            System.out.println("Time=" + i);
-//            vis.TickPause(0);
-//            d.Step();
-//            DrawCells(vis,d,"/Users/baratcEA/work/Moffitt/Phoenix/Fusion/ResultsSpatial/Heterogeneity2D/Mutation/",i);
-//            Shanon=0;
-//            Shanon=d.ComputeShannon();
-//
-//            //System.out.println("Shanon index=" + Shanon);
-//        }
-//        System.out.println("Shanon index=" + Shanon);
 
             try {
                 String fileName="Shanon"+j+".txt";
                 File file = new File(fileName);
                 String fileName2="Richness"+j+".txt";
                 File file2 = new File(fileName2);
-//            File file = new File("Shanon.txt");
+
                 PrintWriter printWriter = new PrintWriter(file);
                 PrintWriter printWriter2 = new PrintWriter(file2);
 
                 for (int i = 0; i < TIMESTEPS; i++) {
                     System.out.println("Time=" + i);
                     vis.TickPause(0);
-                    d.Step();
+                    t.Step();
 
-                    DrawCells(vis, d, "./Results/Heterogeneity/2DContactInhibition/", i);
-                    Total=d.ComputeTotal();
+                    DrawCells(vis, t, "./Results/Heterogeneity/2DContactInhibition/", i);
+                    Total=t.ComputeTotal();
                     //Shanon = d.ComputeShannon();
-                    Richness=d.ComputeRichness();
-                    MaxMut=d.ComputeMaxScore();
+                    Richness=t.ComputeRichness();
+                    MaxMut=t.ComputeMaxScore();
                     System.out.println("MaxMut=" + MaxMut);
-//                    System.out.println("Richness=" + Richness);
-//                    System.out.println("Shanon=" + Shanon);
+
 
                     String line = "";
                     line = "" + i + "," + Shanon + "\n";
@@ -564,13 +445,13 @@ public class FusionModelContactInhibition {
     }
 
 
-    static void DrawCells(Window2DOpenGL vis,Dish d,String path,int i){
-        vis.Clear(Dish.WHITE);
-        for (Cell c:d) {
+    static void DrawCells(Window2DOpenGL vis,Tissue t,String path,int i){
+        vis.Clear(Tissue.WHITE);
+        for (Cell c:t) {
             //color "cytoplasm"
-            vis.Circle(c.Xpt(),c.Ypt(),c.radius, Dish.CYTOPLASM);
+            vis.Circle(c.Xpt(),c.Ypt(),c.radius, Tissue.CYTOPLASM);
         }
-        for (Cell c:d) {
+        for (Cell c:t) {
             //color "nucleus"
             vis.Circle(c.Xpt(),c.Ypt(),c.radius/2.0,c.color);
         }
